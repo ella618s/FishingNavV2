@@ -25,4 +25,4 @@
 
 * **版權所有**：© 2026 Ella Liu. All rights reserved.
 * **僅供面試展示**：本專案程式碼與架構僅作為個人技術作品集與面試展示使用，未經許可不得擅自轉載、重製或用於商業用途。
-* **第三方資源**：地圖資料來源於 [OpenStreetMap](https://www.openstreetmap.org/)，政府資料來源於 [經濟部地質調查及礦業管理中心](https://windpower.geologycloud.tw/)。
+* **第三方資源**：地圖資料來源於 [OpenStreetMap](https://www.openstreetmap.org/)，政府資料來源於 [臺灣離岸風電地質與環境感知系統API服務供應平臺](https://windpower.geologycloud.tw/swagger/api-docs/api?utm_source=chatgpt.com#/%E7%B6%93%E6%BF%9F%E6%B4%BB%E5%8B%95/post_data_Economy_wpzone_approved)。
