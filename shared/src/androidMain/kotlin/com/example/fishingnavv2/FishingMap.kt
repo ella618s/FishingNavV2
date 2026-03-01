@@ -10,6 +10,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import retrofit2.Retrofit
+import okhttp3.MediaType.Companion.toMediaType
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.double
 
 @Composable
 actual fun FishingMap(
@@ -18,6 +26,13 @@ actual fun FishingMap(
 ) {
     val points = fishingPoints as androidx.compose.runtime.snapshots.SnapshotStateList<org.osmdroid.util.GeoPoint>
     val context = androidx.compose.ui.platform.LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    // --- 新增：Retrofit 初始化 ---
+    val json = kotlinx.serialization.json.Json {
+        ignoreUnknownKeys = true // 忽略沒寫到的欄位 (如 crs)，防止噴錯
+        isLenient = true
+    }
 
     var mapReference by remember { mutableStateOf<org.osmdroid.views.MapView?>(null) }
     var isSatelliteMode by remember { mutableStateOf(false) }
@@ -118,7 +133,7 @@ actual fun FishingMap(
                     }
                 }
 
-                // 5. 導航線 (確保不穿透、不偏移)
+                // 5. 導航線
                 val myLoc = locationOverlay.value?.myLocation
                 val target = points.lastOrNull()
                 mapView.overlays.filterIsInstance<org.osmdroid.views.overlay.Polyline>().forEach { mapView.overlays.remove(it) }
