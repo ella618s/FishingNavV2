@@ -40,15 +40,9 @@ kotlin {
                 implementation(compose.ui)
                 implementation(compose.components.resources)
 
-                // --- 必須要有這三行，不能有 // 符號 ---
-                implementation("com.google.code.gson:gson:2.10.1")
                 implementation("com.squareup.retrofit2:retrofit:2.9.0")
-                implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-                // ------------------------------------
-                implementation("com.jakewharton.retrofit2:converter-kotlinx-serialization-converter:0.8.0")
-                implementation("androidx.room:room-runtime:2.8.4")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+                implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
                 implementation("com.squareup.okhttp3:okhttp:4.11.0")
             }
         }
@@ -60,12 +54,6 @@ kotlin {
                 implementation(libs.androidx.lifecycle.runtime.compose)
                 // 加入 osmdroid 的額外功能包
                 implementation("org.osmdroid:osmdroid-android:6.1.20")
-                // 1. 讓 WindFarmData 認得 SerializedName
-                implementation("com.google.code.gson:gson:2.10.1")
-                // 2. 讓 WindPowerApi 認得 Retrofit
-                implementation("com.squareup.retrofit2:retrofit:2.9.0")
-                implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-
                 implementation(libs.osmdroid) // 確保這行也在
             }
         }

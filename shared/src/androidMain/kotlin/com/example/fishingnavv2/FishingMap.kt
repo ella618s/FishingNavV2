@@ -1,5 +1,6 @@
 package com.example.fishingnavv2
 
+import WindPowerResponse
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -10,14 +11,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import retrofit2.Retrofit
-import okhttp3.MediaType.Companion.toMediaType
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.double
+import retrofit2.Retrofit
 
 @Composable
 actual fun FishingMap(
@@ -34,9 +33,62 @@ actual fun FishingMap(
         isLenient = true
     }
 
+    // 2. 初始化 API 服務
+    val api = remember {
+        Retrofit.Builder()
+            .baseUrl("https://windpower.geologycloud.tw/")
+            // 這是 Retrofit 官方的，通常比較不會有版本衝突
+            .addConverterFactory(retrofit2.converter.scalars.ScalarsConverterFactory.create())
+            .build()
+            .create(WindPowerApi::class.java)
+    }
+
     var mapReference by remember { mutableStateOf<org.osmdroid.views.MapView?>(null) }
     var isSatelliteMode by remember { mutableStateOf(false) }
     val locationOverlay = remember { mutableStateOf<org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay?>(null) }
+
+    LaunchedEffect(Unit) {
+        scope.launch {
+            try {
+                val jsonString = api.getWindFarms()
+                // 手動把字串轉成物件，這樣就算 Converter 紅字也沒關係
+                val response = json.decodeFromString<WindPowerResponse>(jsonString)
+
+                if (response.features.isNotEmpty()) {
+                    // 1. 轉換為 GeoPoint 列表
+                    val geoPoints = response.features.mapNotNull { feature ->
+                        try {
+                            val coords = feature.geometry.coordinates
+                            // 因為 Log 顯示有三層括號 [[[...]]]，我們要一路點進去拿到數字
+                            // 假設我們只取該區域的第一個點作為代表
+                            val firstRing = coords[0] as List<*>
+                            val firstPoint = firstRing[0] as List<*>
+
+                            val lon = firstPoint[0].toString().toDouble()
+                            val lat = firstPoint[1].toString().toDouble()
+
+                            org.osmdroid.util.GeoPoint(lat, lon)
+                        } catch (e: Exception) {
+                            null // 如果這筆資料格式不對，就跳過它
+                        }
+                    }
+
+                    // 2. 切換回主執行緒更新 UI 狀態
+                    withContext(Dispatchers.Main) {
+                        points.clear()
+                        points.addAll(geoPoints)
+
+                        // 如果妳想讓地圖自動跳到第一個點位
+                        // mapView.controller.setCenter(geoPoints[0])
+                    }
+
+                    android.util.Log.d("API_DEBUG", "成功解析 14 個點位！")
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("API_DEBUG", "錯誤：${e.message}")
+            }
+        }
+    }
 
     Box(modifier = modifier.fillMaxSize()) {
         AndroidView(
@@ -155,6 +207,17 @@ actual fun FishingMap(
                         position = pt as org.osmdroid.util.GeoPoint
                         setAnchor(org.osmdroid.views.overlay.Marker.ANCHOR_CENTER, org.osmdroid.views.overlay.Marker.ANCHOR_BOTTOM)
                     }
+                    mapView.overlays.add(marker)
+                }
+
+                mapView.overlays.clear()
+
+                // 將 points 轉為 Marker 並加入地圖
+                points.forEach { geoPoint ->
+                    val marker = org.osmdroid.views.overlay.Marker(mapView)
+                    marker.position = geoPoint
+                    marker.setAnchor(org.osmdroid.views.overlay.Marker.ANCHOR_CENTER, org.osmdroid.views.overlay.Marker.ANCHOR_BOTTOM)
+                    marker.title = "離岸風場點位"
                     mapView.overlays.add(marker)
                 }
                 mapView.invalidate()
