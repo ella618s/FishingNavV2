@@ -44,6 +44,7 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
                 implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
                 implementation("com.squareup.okhttp3:okhttp:4.11.0")
+                implementation ("com.google.code.gson:gson:2.10.1")
             }
         }
         // 2. 定義 Android 專屬 (地圖就在這)
